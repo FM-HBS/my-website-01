@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>张先生的网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #cityInput {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        #cityInput:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #searchBtn {
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #searchBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #searchBtn:active {
+            transform: translateY(0);
+        }
+
+        .weather-info {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .weather-main {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .city-name {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .weather-icon {
+            font-size: 80px;
+            margin: 20px 0;
+        }
+
+        .temperature {
+            font-size: 56px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .weather-desc {
+            font-size: 20px;
+            color: #666;
+            text-transform: capitalize;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .detail-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .detail-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .error-message {
+            display: none;
+            background: #fee;
+            color: #c33;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .quick-cities {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .quick-city-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .quick-city-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 日历样式 */
+        .calendar-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-nav {
+            background: #f8f9fa;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #667eea;
+        }
+
+        .month-nav:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .current-date {
+            text-align: center;
+            flex: 1;
+        }
+
+        #currentMonth {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        #lunarDate {
+            font-size: 14px;
+            color: #888;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .calendar-weekdays > div {
+            text-align: center;
+            font-weight: 600;
+            color: #666;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px;
+        }
+
+        .calendar-day:hover {
+            background: #f0f0f0;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .calendar-day.today .lunar-day {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+
+        .calendar-day.other-month .lunar-day {
+            color: #e0e0e0;
+        }
+
+        .solar-day {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .lunar-day {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .calendar-day.has-festival .lunar-day {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .calendar-day.today.has-festival .lunar-day {
+            color: #ffeb3b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 张先生的网站</h1>
+        
+        <!-- 日历模块 -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <button class="month-nav" id="prevMonth">‹</button>
+                <div class="current-date">
+                    <div id="currentMonth"></div>
+                    <div id="lunarDate"></div>
+                </div>
+                <button class="month-nav" id="nextMonth">›</button>
+            </div>
+            <div class="calendar-weekdays">
+                <div>日</div>
+                <div>一</div>
+                <div>二</div>
+                <div>三</div>
+                <div>四</div>
+                <div>五</div>
+                <div>六</div>
+            </div>
+            <div class="calendar-days" id="calendarDays"></div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="输入城市名称，如：北京、上海、纽约" />
+            <button id="searchBtn">搜索</button>
+        </div>
+
+        <div class="quick-cities">
+            <button class="quick-city-btn" onclick="quickSearch('北京')">北京</button>
+            <button class="quick-city-btn" onclick="quickSearch('上海')">上海</button>
+            <button class="quick-city-btn" onclick="quickSearch('广州')">广州</button>
+            <button class="quick-city-btn" onclick="quickSearch('深圳')">深圳</button>
+            <button class="quick-city-btn" onclick="quickSearch('杭州')">杭州</button>
+        </div>
+
+        <div class="error-message" id="errorMsg"></div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px; color: #666;">加载中...</p>
+        </div>
+
+        <div class="weather-info" id="weatherInfo">
+            <div class="weather-main">
+                <div class="city-name" id="cityName"></div>
+                <div class="weather-icon" id="weatherIcon"></div>
+                <div class="temperature" id="temperature"></div>
+                <div class="weather-desc" id="weatherDesc"></div>
+            </div>
+            
+            <div class="weather-details">
+                <div class="detail-item">
+                    <div class="detail-label">体感温度</div>
+                    <div class="detail-value" id="feelsLike"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">湿度</div>
+                    <div class="detail-value" id="humidity"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">风速</div>
+                    <div class="detail-value" id="windSpeed"></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">气压</div>
+                    <div class="detail-value" id="pressure"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 农历计算库 ==========
+        const lunarInfo = [
+            0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
+            0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
+            0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
+            0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+            0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
+            0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5d0, 0x14573, 0x052d0, 0x0a9a8, 0x0e950, 0x06aa0,
+            0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
+            0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b5a0, 0x195a6,
+            0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
+            0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,
+            0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
+            0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+            0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
+            0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
+            0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0
+        ];
+
+        const solarMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const Gan = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+        const Zhi = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+        const Animals = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"];
+        const lunarMonthNames = ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"];
+        const lunarDayNames = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+            "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+            "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"];
+
+        const festivals = {
+            solar: {
+                "1-1": "元旦",
+                "2-14": "情人节",
+                "3-8": "妇女节",
+                "5-1": "劳动节",
+                "6-1": "儿童节",
+                "10-1": "国庆节",
+                "12-25": "圣诞节"
+            },
+            lunar: {
+                "1-1": "春节",
+                "1-15": "元宵节",
+                "5-5": "端午节",
+                "7-7": "七夕节",
+                "8-15": "中秋节",
+                "9-9": "重阳节",
+                "12-8": "腊八节"
+            }
+        };
+
+        function leapMonth(y) {
+            return lunarInfo[y - 1900] & 0xf;
+        }
+
+        function leapDays(y) {
+            if (leapMonth(y)) {
+                return (lunarInfo[y - 1900] & 0x10000) ? 30 : 29;
+            }
+            return 0;
+        }
+
+        function monthDays(y, m) {
+            return (lunarInfo[y - 1900] & (0x10000 >> m)) ? 30 : 29;
+        }
+
+        function yearDays(y) {
+            let sum = 348;
+            for (let i = 0x8000; i > 0x8; i >>= 1) {
+                sum += (lunarInfo[y - 1900] & i) ? 1 : 0;
+            }
+            return sum + leapDays(y);
+        }
+
+        function solar2lunar(y, m, d) {
+            const baseDate = new Date(1900, 0, 31);
+            const objDate = new Date(y, m - 1, d);
+            let offset = Math.floor((objDate - baseDate) / 86400000);
+
+            let i, leap = 0, temp = 0;
+            for (i = 1900; i < 2101 && offset > 0; i++) {
+                temp = yearDays(i);
+                offset -= temp;
+            }
+            if (offset < 0) {
+                offset += temp;
+                i--;
+            }
+
+            const year = i;
+            leap = leapMonth(i);
+            let isLeap = false;
+
+            for (i = 1; i < 13 && offset > 0; i++) {
+                if (leap > 0 && i == (leap + 1) && isLeap == false) {
+                    --i;
+                    isLeap = true;
+                    temp = leapDays(year);
+                } else {
+                    temp = monthDays(year, i);
+                }
+
+                if (isLeap == true && i == (leap + 1)) {
+                    isLeap = false;
+                }
+                offset -= temp;
+            }
+
+            if (offset == 0 && leap > 0 && i == leap + 1) {
+                if (isLeap) {
+                    isLeap = false;
+                } else {
+                    isLeap = true;
+                    --i;
+                }
+            }
+
+            if (offset < 0) {
+                offset += temp;
+                --i;
+            }
+
+            const month = i;
+            const day = offset + 1;
+
+            const ganzhiYear = Gan[(year - 4) % 10] + Zhi[(year - 4) % 12];
+            const animal = Animals[(year - 4) % 12];
+
+            return {
+                year: year,
+                month: month,
+                day: day,
+                isLeap: isLeap,
+                yearCn: ganzhiYear + '年',
+                monthCn: (isLeap ? "闰" : "") + lunarMonthNames[month - 1] + "月",
+                dayCn: lunarDayNames[day - 1],
+                animal: animal + "年"
+            };
+        }
+
+        // ========== 日历功能 ==========
+        let currentDate = new Date();
+        let displayYear = currentDate.getFullYear();
+        let displayMonth = currentDate.getMonth();
+
+        function renderCalendar() {
+            const year = displayYear;
+            const month = displayMonth;
+            const today = new Date();
+            
+            // 更新月份显示
+            document.getElementById('currentMonth').textContent = 
+                `${year}年${month + 1}月`;
+            
+            // 显示今天的农历
+            const todayLunar = solar2lunar(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            document.getElementById('lunarDate').textContent = 
+                `${todayLunar.yearCn} ${todayLunar.animal} ${todayLunar.monthCn}${todayLunar.dayCn}`;
+            
+            // 获取当月第一天是星期几
+            const firstDay = new Date(year, month, 1).getDay();
+            
+            // 获取当月天数
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // 获取上月天数
+            const prevMonthDays = new Date(year, month, 0).getDate();
+            
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+            
+            // 添加上月的日期
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const prevYear = month === 0 ? year - 1 : year;
+                addDayCell(prevYear, prevMonth + 1, day, true);
+            }
+            
+            // 添加当月日期
+            for (let day = 1; day <= daysInMonth; day++) {
+                addDayCell(year, month + 1, day, false);
+            }
+            
+            // 添加下月日期
+            const totalCells = calendarDays.children.length;
+            const remainingCells = 42 - totalCells; // 6行7列
+            for (let day = 1; day <= remainingCells; day++) {
+                const nextMonth = month === 11 ? 0 : month + 1;
+                const nextYear = month === 11 ? year + 1 : year;
+                addDayCell(nextYear, nextMonth + 1, day, true);
+            }
+        }
+
+        function addDayCell(year, month, day, isOtherMonth) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day';
+            
+            const today = new Date();
+            const isToday = year === today.getFullYear() && 
+                           month === today.getMonth() + 1 && 
+                           day === today.getDate();
+            
+            if (isToday) {
+                dayCell.classList.add('today');
+            }
+            
+            if (isOtherMonth) {
+                dayCell.classList.add('other-month');
+            }
+            
+            // 获取农历信息
+            const lunar = solar2lunar(year, month, day);
+            
+            // 检查节日
+            const solarKey = `${month}-${day}`;
+            const lunarKey = `${lunar.month}-${lunar.day}`;
+            let festivalText = lunar.dayCn;
+            
+            if (festivals.solar[solarKey]) {
+                festivalText = festivals.solar[solarKey];
+                dayCell.classList.add('has-festival');
+            } else if (festivals.lunar[lunarKey]) {
+                festivalText = festivals.lunar[lunarKey];
+                dayCell.classList.add('has-festival');
+            }
+            
+            dayCell.innerHTML = `
+                <div class="solar-day">${day}</div>
+                <div class="lunar-day">${festivalText}</div>
+            `;
+            
+            document.getElementById('calendarDays').appendChild(dayCell);
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            displayMonth--;
+            if (displayMonth < 0) {
+                displayMonth = 11;
+                displayYear--;
+            }
+            renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            displayMonth++;
+            if (displayMonth > 11) {
+                displayMonth = 0;
+                displayYear++;
+            }
+            renderCalendar();
+        });
+
+        // ========== 天气功能 ==========
+        const searchBtn = document.getElementById('searchBtn');
+        const cityInput = document.getElementById('cityInput');
+        const weatherInfo = document.getElementById('weatherInfo');
+        const errorMsg = document.getElementById('errorMsg');
+        const loading = document.getElementById('loading');
+
+        // 天气图标映射
+        const weatherConditions = {
+            '晴': '☀️',
+            '多云': '⛅',
+            '阴': '☁️',
+            '小雨': '🌧️',
+            '中雨': '🌧️',
+            '大雨': '⛈️',
+            '雷阵雨': '⛈️',
+            '雪': '❄️',
+            '雾': '🌫️',
+            'Clear': '☀️',
+            'Cloudy': '☁️',
+            'Partly cloudy': '⛅',
+            'Overcast': '☁️',
+            'Rain': '🌧️',
+            'Light rain': '🌦️',
+            'Heavy rain': '⛈️',
+            'Snow': '❄️',
+            'Fog': '🌫️',
+            'Mist': '🌫️'
+        };
+
+        async function getWeather(city) {
+            try {
+                showLoading();
+                hideError();
+                
+                // 使用wttr.in API - 免费且无需API key
+                const response = await fetch(
+                    `https://wttr.in/${encodeURIComponent(city)}?format=j1&lang=zh`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('城市未找到或网络错误');
+                }
+                
+                const data = await response.json();
+                displayWeather(data, city);
+                
+            } catch (error) {
+                showError('获取天气信息失败，请检查城市名称或稍后重试');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayWeather(data, cityName) {
+            const current = data.current_condition[0];
+            const weatherDesc = current.lang_zh ? current.lang_zh[0].value : current.weatherDesc[0].value;
+            
+            // 获取对应的天气图标
+            let icon = '🌤️';
+            for (const [key, value] of Object.entries(weatherConditions)) {
+                if (weatherDesc.includes(key)) {
+                    icon = value;
+                    break;
+                }
+            }
+            
+            document.getElementById('cityName').textContent = cityName;
+            document.getElementById('weatherIcon').textContent = icon;
+            document.getElementById('temperature').textContent = current.temp_C + '°C';
+            document.getElementById('weatherDesc').textContent = weatherDesc;
+            document.getElementById('feelsLike').textContent = current.FeelsLikeC + '°C';
+            document.getElementById('humidity').textContent = current.humidity + '%';
+            document.getElementById('windSpeed').textContent = current.windspeedKmph + ' km/h';
+            document.getElementById('pressure').textContent = current.pressure + ' mb';
+            
+            weatherInfo.style.display = 'block';
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            weatherInfo.style.display = 'none';
+        }
+
+        function hideError() {
+            errorMsg.style.display = 'none';
+        }
+
+        function showLoading() {
+            loading.style.display = 'block';
+            weatherInfo.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+        }
+
+        function quickSearch(city) {
+            cityInput.value = city;
+            getWeather(city);
+        }
+
+        searchBtn.addEventListener('click', () => {
+            const city = cityInput.value.trim();
+            if (city) {
+                getWeather(city);
+            } else {
+                showError('请输入城市名称');
+            }
+        });
+
+        cityInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+
+        // 页面加载时显示默认城市和日历
+        window.addEventListener('load', () => {
+            renderCalendar();
+            getWeather('北京');
+        });
+    </script>
+</body>
+</html>
